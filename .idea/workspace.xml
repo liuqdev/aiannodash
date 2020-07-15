@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="edf68324-9787-4af9-bcff-3ee9135d061e" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/../.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/../.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../.idea/LabelLab.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/LabelLab.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/Canvas.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/MainWindow.ui" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/QtApp/MainWindow.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/QtApp/MainWindow.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/QtApp/MainWindow.ui" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/QtApp/QtApp.pro" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/QtApp/QtApp.pro.user" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/QtApp/images/132.bmp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/QtApp/images/212.bmp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/QtApp/images/322.bmp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/QtApp/images/324.bmp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/QtApp/images/500.bmp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/QtApp/images/502.bmp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/QtApp/images/504.bmp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/QtApp/images/508.bmp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/QtApp/images/510.bmp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/QtApp/images/512.bmp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/QtApp/images/514.bmp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/QtApp/images/516.bmp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/QtApp/images/718.bmp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/QtApp/images/724.bmp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/QtApp/images/728.bmp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/QtApp/images/app.ico" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/QtApp/main.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/QtApp/res.qrc" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/QtApp/ui_MainWindow.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/ResizedQWidget.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/appMain.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/build-QtApp-Desktop_Qt_5_14_2_MinGW_64_bit-Debug/.qmake.stash" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/build-QtApp-Desktop_Qt_5_14_2_MinGW_64_bit-Debug/Makefile" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/build-QtApp-Desktop_Qt_5_14_2_MinGW_64_bit-Debug/Makefile.Debug" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/build-QtApp-Desktop_Qt_5_14_2_MinGW_64_bit-Debug/Makefile.Release" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/build-QtApp-Desktop_Qt_5_14_2_MinGW_64_bit-Debug/debug/main.o" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/build-QtApp-Desktop_Qt_5_14_2_MinGW_64_bit-Debug/debug/moc_MainWindow.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/build-QtApp-Desktop_Qt_5_14_2_MinGW_64_bit-Debug/debug/moc_predefs.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/build-QtApp-Desktop_Qt_5_14_2_MinGW_64_bit-Debug/debug/qrc_res.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/build-QtApp-Desktop_Qt_5_14_2_MinGW_64_bit-Debug/debug/qrc_res.o" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/build-QtApp-Desktop_Qt_5_14_2_MinGW_64_bit-Debug/ui_MainWindow.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/myMainWindow.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/res_rc.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/ui_MainWindow.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/ui_MainWindow_empty.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mainWindowApp/uic.bat" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectId" id="1eheWSURSj5gnLHQACpQDFix9cy" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="edf68324-9787-4af9-bcff-3ee9135d061e" name="Default Changelist" comment="" />
+      <created>1594778282813</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1594778282813</updated>
+      <workItem from="1594778286938" duration="96000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="2" />
+  </component>
+</project>
