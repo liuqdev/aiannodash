@@ -143,8 +143,8 @@ html, body {
     justify-content: flex-start;
     align-items: center;
     background-color: #272a31;
-    padding-left: 2rem;
-    padding-bottom: 3rem;
+    /* padding-left: 2rem; */
+    /* padding-bottom: 3rem; */
     height: 100%;
     max-width: 100%;
 }
@@ -260,7 +260,8 @@ html, body {
     box-sizing: border-box; /* Opera/IE 8+ */
     background-color: #31343a;
     color: darkgray !important;
-    padding: 7rem 2rem 0 2rem;
+    /* padding: 7rem 2rem 0 2rem; */
+    padding: 3rem 2rem 0 2rem;
 }
 
 @media (min-width: 1311px) {

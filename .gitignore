@@ -3,3 +3,8 @@ images/*
 .idea/*
 .vscode
 .vscode/*
+__pycache__
+data
+.vscode
+.ipynb_checkpoints
+app_uploaded_files

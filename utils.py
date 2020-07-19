@@ -2,11 +2,15 @@ import os
 import pathlib
 import json
 
+import imageio
+import cv2
 import dash_core_components as dcc
 import plotly.graph_objs as go
 import dash_reusable_components as drc
-
 from PIL import Image, ImageFilter, ImageDraw, ImageEnhance
+
+import dash_reusable_components as drc
+from dash_reusable_components import numpy_to_b64
 
 #
 APP_PATH = str(pathlib.Path(__file__).parent.resolve())
@@ -16,10 +20,14 @@ STORAGE_PLACEHOLDER = json.dumps(
     {"filename": None, "image_signature": None, "action_stack": []}
 )
 
+DEFAULT_IMAGE_NAME = os.path.join(APP_PATH, os.path.join("images", "default.jpg"))
 IMAGE_STRING_PLACEHOLDER = drc.pil_to_b64(
-    Image.open(os.path.join(APP_PATH, os.path.join("images", "default.jpg"))).copy(),
-    enc_format="jpeg",
+    Image.open(DEFAULT_IMAGE_NAME).copy(),
+    enc_format="jpeg"
 )
+img=imageio.imread(DEFAULT_IMAGE_NAME)
+b64=numpy_to_b64(img,enc_format="png",scalar=False)
+b64_decoded='data:image/png;base64,{}'.format(b64)
 
 GRAPH_PLACEHOLDER = dcc.Graph(
     id="interactive-image",
@@ -29,36 +37,36 @@ GRAPH_PLACEHOLDER = dcc.Graph(
             "autosize": True,
             "paper_bgcolor": "#272a31",
             "plot_bgcolor": "#272a31",
-            "margin": go.Margin(l=40, b=40, t=26, r=10),
+            "margin": dict(l=40, b=40, t=26, r=10),
             "xaxis": {
                 "range": (0, 1527),
                 "scaleanchor": "y",
                 "scaleratio": 1,
-                "color": "white",
-                "gridcolor": "#43454a",
+                # "color": "white",
+                # "gridcolor": "#43454a",
                 "tickwidth": 1,
             },
             "yaxis": {
                 "range": (0, 1200),
-                "color": "white",
-                "gridcolor": "#43454a",
+                # "color": "white",
+                # "gridcolor": "#43454a",
                 "tickwidth": 1,
             },
-            "images": [
-                {
-                    "xref": "x",
-                    "yref": "y",
-                    "x": 0,
-                    "y": 0,
-                    "yanchor": "bottom",
-                    "sizing": "stretch",
-                    "sizex": 1527,
-                    "sizey": 1200,
-                    "layer": "below",
-                    "source": "/images/default.jpg",
-                }
-            ],
-            "dragmode": "select",
+            # "images": [
+            #     {
+            #         "xref": "x",
+            #         "yref": "y",
+            #         "x": 0,
+            #         "y": 0,
+            #         "yanchor": "bottom",
+            #         "sizing": "stretch",
+            #         "sizex": 1527,
+            #         "sizey": 1200,
+            #         "layer": "below",
+            #         "source": b64_decoded,
+            #     }
+            # ],
+            # "dragmode": "select",
         },
     },
 )
@@ -192,7 +200,7 @@ def show_histogram(image):
     layout = go.Layout(
         autosize=True,
         title=title,
-        margin=go.Margin(l=50, r=30),
+        margin=dict(l=50, r=30),
         legend=dict(x=0, y=1.15, orientation="h"),
         paper_bgcolor="#31343a",
         plot_bgcolor="#272a31",

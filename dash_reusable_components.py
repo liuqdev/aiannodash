@@ -234,7 +234,7 @@ def InteractiveImagePIL(
                 "autosize": True,
                 "paper_bgcolor": "#272a31",
                 "plot_bgcolor": "#272a31",
-                "margin": go.Margin(l=40, b=40, t=26, r=10),
+                "margin": dict(l=40, b=40, t=26, r=10),
                 "xaxis": {
                     "range": (0, width),
                     "scaleanchor": "y",
