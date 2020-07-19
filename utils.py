@@ -210,3 +210,5 @@ def show_histogram(image):
     )
 
     return go.Figure(data=data, layout=layout)
+
+

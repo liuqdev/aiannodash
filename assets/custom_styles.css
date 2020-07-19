@@ -112,7 +112,7 @@ html, body {
     box-sizing: border-box; /* Opera/IE 8+ */
     display: flex;
     flex-direction: column;
-    padding: 3rem 5%;
+    padding: 1rem 2%;
     background-color: #272a31;
 }
 
@@ -280,6 +280,7 @@ html, body {
 /*Dropdown stuff below*/
 .Select-control, .Select-multi-value-wrapper, .Select-menu-outer div {
     background-color: #31343a;
+    width: 100%;
 }
 
 .Select-control, .Select, .Select-value-label, .Select-clear-zone {

@@ -1,3 +1,4 @@
 {
-    "python.pythonPath": "C:\\Users\\qi\\miniconda3\\envs\\labelme\\python.exe"
+    "python.pythonPath": "C:\\Users\\qi\\miniconda3\\envs\\labelme\\python.exe",
+    "python.formatting.provider": "yapf"
 }

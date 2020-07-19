@@ -152,7 +152,7 @@ def Card(children, **kwargs):
         children,
         style=_merge(
             {
-                "padding": 20,
+                "padding": "20px 0px",
                 "margin": 5,
                 # Remove possibility to select the text for better UX
                 "user-select": "none",
