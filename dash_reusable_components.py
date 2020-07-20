@@ -44,7 +44,7 @@ def pil_to_b64(im, enc_format="png", verbose=False, **kwargs):
     return encoded
 
 
-def numpy_to_b64(np_array, enc_format="png", scalar=True, **kwargs):
+def numpy_to_b64(np_array, enc_format="png", scalar=False, **kwargs):
     """
     Converts a numpy image into base 64 string for HTML displaying
     :param np_array:

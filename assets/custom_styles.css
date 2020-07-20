@@ -225,8 +225,7 @@ html, body {
     max-width: 100%
 }
 
-/*showline: False*/
-.yzl.zl.crisp {
+/* .yzl.zl.crisp {
     stroke: darkgray !important;
 }
 
@@ -250,7 +249,7 @@ html, body {
     #div-interactive-image, #interactive-image {
         height: 20rem;
     }
-}
+} */
 
 /* sidebar
 –––––––––––––––––––––––––––––––––––––––––––––––––– */

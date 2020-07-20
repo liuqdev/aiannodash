@@ -8,18 +8,26 @@ import sys
 import pathlib
 import base64
 import glob
+import requests
 
+import numpy as np
+import pydicom
+import imageio
+import cv2
+import nibabel as nib
 import boto3
 import dash
 from flask import Flask, send_from_directory
 import dash_core_components as dcc
 import dash_html_components as html
-import requests
+import plotly.graph_objects as go
+import plotly.express as px
 from dash.dependencies import Input, Output, State
 from flask_caching import Cache
 
 import dash_reusable_components as drc
 import utils
+from utils import numpy_to_b64
 
 #################################################################################
 # Application Configuration
@@ -42,13 +50,93 @@ def download(path):
     """Serve a file from the upload directory."""
     return send_from_directory(UPLOAD_DIRECTORY, path, as_attachment=True)
 
-
+styles = {
+    'pre': {
+        'border': 'thin lightgrey solid',
+        'overflowX': 'scroll',
+        "height":"100px",
+    },
+    'Ul':{
+        "height":"100px",
+        "overflow":"hidden",
+        "overflow-y":"scroll"
+    }
+}
 
 # https://docs.faculty.ai/user-guide/apps/examples/dash_file_upload_download.html
 UPLOAD_DIRECTORY = "./app_uploaded_files"
 if not os.path.exists(UPLOAD_DIRECTORY):
     os.makedirs(UPLOAD_DIRECTORY)
 #################################################################################
+
+
+##############################################################################################
+# Helper functions
+##############################################################################################
+def add_img_to_figure(image_code, height=600, width=1600, scale_factor=1):
+    # Create figure
+    fig = go.Figure()
+
+    # Constants
+    img_width = width
+    img_height = height
+    scale_factor = scale_factor
+
+    # Add invisible scatter trace.
+    # This trace is added to help the autoresize logic work.
+    fig.add_trace(
+        go.Scatter(
+            x=[0, img_width * scale_factor],
+            y=[0, img_height * scale_factor],
+            mode="markers",
+            marker_opacity=0
+        )
+    )
+
+    # Configure axes
+    fig.update_xaxes(
+        visible=False,
+        range=[0, img_width * scale_factor]
+    )
+
+    fig.update_yaxes(
+        visible=True,
+        #range=[0, img_height * scale_factor],
+        range=[img_height * scale_factor, 0],  # 调整坐标范围用
+        # the scaleanchor attribute ensures that the aspect ratio stays constant
+        scaleanchor="x"
+    )
+
+    # Add image
+    fig.add_layout_image(
+        dict(
+        x=0,
+        sizex=img_width * scale_factor,
+        #y=img_height * scale_factor,
+        y=0,
+        sizey=img_height * scale_factor,
+        xref="x",
+        yref="y",
+        opacity=1.0,
+        layer="below",
+        sizing="stretch",
+        source=image_code
+        )
+    )
+
+    # Configure other layout
+    fig.update_layout(
+        # clickmode='event+select',
+        # width=img_width * scale_factor,
+        # height=img_height * scale_factor,
+        # width=600,
+        height=700,
+        margin={"l": 0, "r": 0, "t": 0, "b": 0},
+        paper_bgcolor="#272a31",
+        plot_bgcolor="#272a31",
+        # autosize=True
+    )
+    return fig
 
 def get_dropdown_datasets_list():
     ret_dropdown_datasets_list = []
@@ -59,6 +147,121 @@ def get_dropdown_datasets_list():
     ret_dropdown_datasets_list.append({'label': dataset_basename, 'value': dataset_basename})
     return ret_dropdown_datasets_list
 
+def mkdir(dir_name):
+    if not os.path.exists(dir_name):
+        os.makedirs(dir_name)
+            
+
+# 原样保存文件
+def save_file(name, content):
+    """Decode and store a file uploaded with Plotly Dash."""
+    data = content.encode("utf8").split(b";base64,")[1]
+    with open(name, "wb") as fp:
+        fp.write(base64.decodebytes(data))
+
+# 显示已经上传的数据集的名称
+def uploaded_dirs(path, pattern="/*"):
+    dirs_fns = []
+    for fn in glob.glob(path+pattern):
+        if os.path.isdir(fn):
+            dirs_fns.append(fn)
+    return dirs_fns
+
+# 显示已经上传的文件夹中的文件
+def uploaded_files(path, pattern="/*"):
+    """List the files in the upload directory."""
+    files_fns = []
+    for filename in glob.glob(path+pattern):
+        if os.path.isfile(filename):
+            files_fns.append(filename)
+    return files_fns
+
+# 创建下载链接
+def file_download_link(filename):
+    """Create a Plotly Dash 'A' element that downloads a file from the app."""
+    location = "/download/{}".format(urlquote(filename))
+    print("location: ", location)
+    return html.A(filename, href=location)
+
+
+def read_file(file_fn, file_format):
+    """
+    Support format: jpg/jpeg, png, dcm, nii, nii.gz, npy
+    """
+    import numpy as np
+    d = None  # data return
+    try:
+        print(file_fn, "-----------------", file_format)
+        if file_format.lower() in {"png", "jpeg", "jpg", "bmp"}:
+            d = np.array(imageio.imread(file_fn))
+            print("=================", type(d))
+        elif file_format.lower() in {"dcm"}:
+            # import pydicom
+            ds = pydicom.read_file(file_fn)
+            # img = ds.pixel_array
+            d = ds
+        elif file_format.lower() in {"nii", 'nii.gz'}:  # 3D/4D files
+            import nibabel as nib  
+            d = nib.load(file_fn)
+        elif file_format.lower() in {'npy'}:
+            
+            d = np.load(file_fn)
+        else:
+            # TODO: 使用medoy支持更多类型的医学数据
+            print("Unsupport image format")
+        return d
+    except Exception as e:
+        print("File Reading error !", e)
+
+# 根据文件名来读取文件
+def get_image_data(file_fn, file_format, enc_format='png'):
+    
+    data = {
+        'fullname': file_fn,
+        'format': file_format
+    }
+
+    img_decoded = None
+    
+    # 对于不同类型的数据分别处理
+    d = read_file(file_fn, file_format)
+    # eg. xxx.png, shape(h, w)
+    if isinstance(d, np.ndarray):
+        # 灰度图
+        # gray image
+        if d.ndim==2:
+            img = d
+            h, w = d.shape[0], d.shape[1]
+            if_scalar = False if img.dtype==np.uint8 else True
+            img_encoded = numpy_to_b64(d, enc_format=enc_format, scalar=if_scalar)
+            img_decoded = 'data:image/{};base64,{}'.format(enc_format, img_encoded)
+            data['ndim'] = 2
+            data['width'] = w
+            data['height'] = h
+            data['encoded_b64'] = img_encoded
+            data['decoded_b64'] = img_decoded
+        elif d.ndim==3:
+            # 可能是彩图等多通道图, 也可能是3D图
+            if d.shape[2] in {1, 3, 4}:
+                img = d.squeeze()
+                h, w = d.shape[0], d.shape[1]
+                if_scalar = False if img.dtype==np.uint8 else True
+                img_encoded = numpy_to_b64(d, enc_format=enc_format, scalar=if_scalar)
+                img_decoded = 'data:image/{};base64,{}'.format(enc_format, img_encoded)
+                data['ndim'] = 3
+                data['width'] = w
+                data['height'] = h
+                data['encoded_b64'] = img_encoded
+                data['decoded_b64'] = img_decoded
+                print("--------------------3")
+            else:  # 3D图
+                pass 
+            pass
+    elif isinstance(d, str):  # 3D or 4D图
+        pass
+
+    return data
+#########################################################################################
 
 def get_app_layout(session_id):
     app_layout = html.Div(
@@ -88,16 +291,25 @@ def get_app_layout(session_id):
                             # showing the image, as well as the hidden div storing
                             # the true image
                             html.Div(
-                                id="div-interactive-image",
+                                id="div-interactive_image",
                                 children=[
                                     # utils.GRAPH_PLACEHOLDER,
-                                    # html.Div(
-                                    #     id="div-storage",
-                                    #     children=utils.STORAGE_PLACEHOLDER,
-                                    # ),
 
-                                    # graph area
-                                    # utils.GRAPH_PLACEHOLDER,
+                                    # main graph
+                                    # 主要的显示区
+                                    dcc.Graph(
+                                        id="interactive_image",
+                                        
+                                    ),
+
+                                    html.Img(
+                                        id="img_show",
+                                    ),
+
+                                    html.Div(
+                                        id="div-storage",
+                                        children=utils.STORAGE_PLACEHOLDER,
+                                    ),
                                 ],
                             )
                         ],
@@ -182,11 +394,7 @@ def get_app_layout(session_id):
                                     ),
                                     # 显示上传的文件列表
                                     html.Ul(id="ul_file_list", 
-                                        style={
-                                            "height":"100px",
-                                            "overflow":"hidden",
-                                            "overflow-y":"scroll"
-                                        }
+                                        style=styles['Ul']
                                     ),
 
                                     # 输入数据集的名称
@@ -199,15 +407,6 @@ def get_app_layout(session_id):
                                     # 确认
                                     html.Button(id='btn_upload', n_clicks=0, children='Upload'),
 
-                                    # drc.NamedInlineRadioItems(
-                                    #     name="Selection Mode",
-                                    #     short="selection-mode",
-                                    #     options=[
-                                    #         {"label": " Rectangular", "value": "select"},
-                                    #         # {"label": " Lasso", "value": "lasso"},
-                                    #     ],
-                                    #     val="select",
-                                    # ),
                                 ]),
                                 drc.Card([
                                     html.Div(
@@ -276,6 +475,19 @@ def get_app_layout(session_id):
                             label="Tools",
                             children=[
                                 drc.Card([
+                                    # drc.NamedInlineRadioItems(
+                                    #     name="Selection Mode",
+                                    #     short="selection-mode",
+                                    #     options=[
+                                    #         {"label": " Rectangular", "value": "select"},
+                                    #         {"label": " Lasso", "value": "lasso"},
+                                    #     ],
+                                    #     val="select",
+                                    # ),
+                                    # 选择的数据
+                                    html.Pre(id='selected-data', style=styles['pre']),
+                                    # 选择的区域
+                                    html.Pre(id='relayout-data', style=styles['pre']),
                                     drc.CustomDropdown(
                                         id="dropdown-filters",
                                         options=[
@@ -491,43 +703,6 @@ def upload_dataset(n_clicks, filenames, contents, dataset_name):
         return ret_ul_file_list , ret_dropdown_datasets_list #, []
 
 
-def mkdir(dir_name):
-    if not os.path.exists(dir_name):
-        os.makedirs(dir_name)
-            
-
-# 原样保存文件
-def save_file(name, content):
-    """Decode and store a file uploaded with Plotly Dash."""
-    data = content.encode("utf8").split(b";base64,")[1]
-    with open(name, "wb") as fp:
-        fp.write(base64.decodebytes(data))
-
-# 显示已经上传的数据集的名称
-def uploaded_dirs(path, pattern="/*"):
-    dirs_fns = []
-    for fn in glob.glob(path+pattern):
-        if os.path.isdir(fn):
-            dirs_fns.append(fn)
-    return dirs_fns
-
-# 显示已经上传的文件夹中的文件
-def uploaded_files(path, pattern="/*"):
-    """List the files in the upload directory."""
-    files_fns = []
-    for filename in glob.glob(path+pattern):
-        if os.path.isfile(filename):
-            files_fns.append(filename)
-    return files_fns
-
-# 创建下载链接
-def file_download_link(filename):
-    """Create a Plotly Dash 'A' element that downloads a file from the app."""
-    location = "/download/{}".format(urlquote(filename))
-    print("location: ", location)
-    return html.A(filename, href=location)
-
-
 # # 根据数据集名称, 更新图像数据列表和下拉列表
 # @app.callback(
 #     [
@@ -556,11 +731,14 @@ def file_download_link(filename):
 #     else:
 #         return [], []
 
+# 选择具体数据集的图像文件
 @app.callback(
     [
         Output('div_current_dataset', 'children'),
         Output('dropdown_files_list', 'options'),
-        Output('div_current_file', 'children'),
+        Output('div_current_file', 'children'),        
+        Output('img_show', 'src'),
+        Output('interactive_image', 'figure')
     ],
     [
         Input('dropdown_datasets_list', 'value'),
@@ -571,19 +749,69 @@ def file_download_link(filename):
     # ]
 )
 def display_current_dataset(dataset_name, file_name):
+    ret = [
+        'current dataset name: {}'.format(dataset_name),
+        [],
+        'current file name: {}'.format(file_name),
+        '',
+        utils.FIGURE_PLACEHOLDER  # 默认显示
+    ]
+
+    print(dataset_name, file_name)
     if dataset_name is not None:
         ret_dropdown_files_list = []
         files_fns = uploaded_files(os.path.join(UPLOAD_DIRECTORY, dataset_name))
         for filename in files_fns:
             base_name = os.path.basename(filename)
             ret_dropdown_files_list.append({"label": base_name, "value": base_name})
+        
+        if file_name is not None:
+            # 读取当前文件, 将其输出到interactive_image上
+            current_file = os.path.join(UPLOAD_DIRECTORY, dataset_name, file_name)
+            file_format = '.'.join(file_name.split('.')[1:])
+            print(current_file, file_format)
+
+            img_data = get_image_data(file_fn=current_file, file_format=file_format, enc_format='png')
+            print(img_data.keys())
             
+            if 'decoded_b64' in img_data.keys():
+                ret[3] = img_data['decoded_b64']
+                fig = add_img_to_figure(img_data['decoded_b64'], height=img_data['height'], width=img_data['width'])
+                ret[4] = fig
+
         # return ret_dropdown_files_list, ret_ul_file_list
-        return 'current dataset name: {}'.format(dataset_name), ret_dropdown_files_list, 'current file name: {}'.format(file_name)
+        ret[1] = ret_dropdown_files_list
+        
+        return ret[0], ret[1], ret[2], ret[3], ret[4]  #, fig
     else:
-        return 'current dataset name: {}'.format(dataset_name), [], 'current file name: {}'.format(file_name)
+        return ret[0], ret[1], ret[2], ret[3], ret[4]  #, go.Figure()
+
+# @app.callback(
+#     Output("interactive_image", "figure"),
+#     [Input("radio-selection-mode", "value")],
+#     [State("interactive_image", "figure")],
+# )
+# def update_selection_mode(selection_mode, figure):
+#     if figure:
+#         figure["layout"]["dragmode"] = selection_mode
+#     return figure
+
+@app.callback(
+    Output('selected-data', 'children'),
+    [Input('interactive_image', 'selectedData')])
+def display_selected_data(selectedData):
+    # print(type(selectedData))
+    # print("display_selected_data")
+    # print(selectedData)
+    return json.dumps(selectedData, indent=2)
 
 
+@app.callback(
+    Output('relayout-data', 'children'),
+    [Input('interactive_image', 'relayoutData')])
+def display_relayout_data(relayoutData):
+    # print("display_relayout_data")
+    return json.dumps(relayoutData, indent=2)
 
 
 # Running the server
