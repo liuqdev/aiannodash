@@ -302,6 +302,24 @@ def get_app_layout(session_id):
                                         
                                     ),
 
+html.Div(
+    id='div_slicer'
+),
+
+                                    # dcc.Slider(
+                                    #     id="slicer_images",
+                                    #         min=0,
+                                    #         max=100,
+                                    #         value=65,
+                                    #         marks={
+                                    #             0: {'label': '0 °C', 'style': {'color': '#77b0b1'}},
+                                    #             26: {'label': '26 °C'},
+                                    #             37: {'label': '37 °C'},
+                                    #             100: {'label': '100 °C', 'style': {'color': '#f50'}}
+                                    #         }
+                                    # ),
+
+
                                     html.Img(
                                         id="img_show",
                                     ),
@@ -670,7 +688,7 @@ def select_upload_format(item):
     ]
 )
 def upload_dataset(n_clicks, filenames, contents, dataset_name):
-    print('dataset name', dataset_name)
+    print('func: upload_dataset', dataset_name)
     if filenames is not None and contents is not None:
         for fn in filenames:
             print(f'filename: {fn}')
@@ -738,7 +756,8 @@ def upload_dataset(n_clicks, filenames, contents, dataset_name):
         Output('dropdown_files_list', 'options'),
         Output('div_current_file', 'children'),        
         Output('img_show', 'src'),
-        Output('interactive_image', 'figure')
+        Output('interactive_image', 'figure'),
+        Output('div_slicer', 'children')
     ],
     [
         Input('dropdown_datasets_list', 'value'),
@@ -754,9 +773,11 @@ def display_current_dataset(dataset_name, file_name):
         [],
         'current file name: {}'.format(file_name),
         '',
-        utils.FIGURE_PLACEHOLDER  # 默认显示
+        utils.FIGURE_PLACEHOLDER,  # 默认显示
+        dcc.Slider(disabled=True)
     ]
 
+    print("func display_current_dataset")
     print(dataset_name, file_name)
     if dataset_name is not None:
         ret_dropdown_files_list = []
@@ -779,12 +800,29 @@ def display_current_dataset(dataset_name, file_name):
                 fig = add_img_to_figure(img_data['decoded_b64'], height=img_data['height'], width=img_data['width'])
                 ret[4] = fig
 
+                idx = files_fns.index(current_file)
+                
+                num_imgs = len(files_fns)
+                step  = 1 if num_imgs<101 else num_imgs//10
+                print("current file:{} idx: {}/{}".format(current_file, idx, num_imgs))
+                slider_images = dcc.Slider(
+                    id="slicer_images",
+                        min=1,
+                        max=num_imgs,
+                        value=idx+1,
+                        step=step,
+                        marks={str(i+1): str(i+1) for i in range(0, num_imgs, 1)}
+                )
+                print({str(i+1): str(i+1) for i in range(0, num_imgs, 1)})
+                ret[5] = slider_images
+
+
         # return ret_dropdown_files_list, ret_ul_file_list
         ret[1] = ret_dropdown_files_list
         
-        return ret[0], ret[1], ret[2], ret[3], ret[4]  #, fig
+        return ret[0], ret[1], ret[2], ret[3], ret[4], ret[5]  #, fig
     else:
-        return ret[0], ret[1], ret[2], ret[3], ret[4]  #, go.Figure()
+        return ret[0], ret[1], ret[2], ret[3], ret[4], ret[5]  #, go.Figure()
 
 # @app.callback(
 #     Output("interactive_image", "figure"),

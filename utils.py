@@ -156,55 +156,55 @@ FIGURE_PLACEHOLDER = get_figure_placeholder(img_height=800, img_width=1200)
 
 
 
-GRAPH_PLACEHOLDER = dcc.Graph(
-    id="interactive-image",
-    # figure={
-    #     "layout": {
-    #         "autosize": True,
-    #         "paper_bgcolor": "#272a31",
-    #         "plot_bgcolor": "#272a31",
-    #     }
-    # },
-    figure={
-        "data": [],
-        "layout": {
-            # "autosize": True,
-            # "paper_bgcolor": "#272a31",
-            # "plot_bgcolor": "#272a31",
-            "margin": dict(l=40, t=30, r=10, b=30),
-            "xaxis": {
-                "range": (0, 1600),
-                "scaleanchor": "y",
-                "scaleratio": 1,
-                "color": "white",
-                "gridcolor": "#43454a",
-                "tickwidth": 1,
-            },
-            "yaxis": {
-                "range": (1600, 0),
-                "color": "white",
-                "gridcolor": "#43454a",
-                "tickwidth": 1,
-                "scaleanchor":"x"
-            },
-            # "images": [
-            #     {
-            #         "xref": "x",
-            #         "yref": "y",
-            #         "x": 0,
-            #         "y": 0,
-            #         "yanchor": "bottom",
-            #         "sizing": "stretch",
-            #         "sizex": 1600,
-            #         "sizey": 1600,
-            #         "layer": "below",
-            #         "source": b64_decoded,
-            #     }
-            # ],
-            # "dragmode": "select",
-        },
-    },
-)
+# GRAPH_PLACEHOLDER = dcc.Graph(
+#     id="interactive-image",
+#     # figure={
+#     #     "layout": {
+#     #         "autosize": True,
+#     #         "paper_bgcolor": "#272a31",
+#     #         "plot_bgcolor": "#272a31",
+#     #     }
+#     # },
+#     figure={
+#         "data": [],
+#         "layout": {
+#             # "autosize": True,
+#             # "paper_bgcolor": "#272a31",
+#             # "plot_bgcolor": "#272a31",
+#             "margin": dict(l=40, t=30, r=10, b=30),
+#             "xaxis": {
+#                 "range": (0, 1600),
+#                 "scaleanchor": "y",
+#                 "scaleratio": 1,
+#                 "color": "white",
+#                 "gridcolor": "#43454a",
+#                 "tickwidth": 1,
+#             },
+#             "yaxis": {
+#                 "range": (1600, 0),
+#                 "color": "white",
+#                 "gridcolor": "#43454a",
+#                 "tickwidth": 1,
+#                 "scaleanchor":"x"
+#             },
+#             # "images": [
+#             #     {
+#             #         "xref": "x",
+#             #         "yref": "y",
+#             #         "x": 0,
+#             #         "y": 0,
+#             #         "yanchor": "bottom",
+#             #         "sizing": "stretch",
+#             #         "sizex": 1600,
+#             #         "sizey": 1600,
+#             #         "layer": "below",
+#             #         "source": b64_decoded,
+#             #     }
+#             # ],
+#             # "dragmode": "select",
+#         },
+#     },
+# )
 
 # Maps process name to the Image filter corresponding to that process
 FILTERS_DICT = {
