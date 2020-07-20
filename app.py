@@ -303,7 +303,10 @@ def get_app_layout(session_id):
                                     ),
 
 html.Div(
-    id='div_slicer'
+    id='div_slicer',
+    children=[
+        dcc.Slider(id="slicer_images", disabled=True)
+    ]
 ),
 
                                     # dcc.Slider(
@@ -692,17 +695,20 @@ def upload_dataset(n_clicks, filenames, contents, dataset_name):
     if filenames is not None and contents is not None:
         for fn in filenames:
             print(f'filename: {fn}')
-
         ret_ul_file_list = [html.Li(filename) for filename in filenames]
     else:
         ret_ul_file_list = [html.Li("No files yet!")]
     
+    # 扫描已经存在的数据集
     ret_dropdown_datasets_list = []
     datasets_list = uploaded_dirs(UPLOAD_DIRECTORY, "/*")
     for dataset_fn in datasets_list:
         dataset_basename = os.path.basename(dataset_fn)
         ret_dropdown_datasets_list.append({'label': dataset_basename, 'value': dataset_basename})
 
+
+
+    # 添加新的数据集
     if n_clicks>0:
         print("uploading ...", filenames)
         print("n_clicks", n_clicks)
@@ -719,6 +725,35 @@ def upload_dataset(n_clicks, filenames, contents, dataset_name):
         return ret_ul_file_list , ret_dropdown_datasets_list #, dataset_name
     else:
         return ret_ul_file_list , ret_dropdown_datasets_list #, []
+
+
+
+# 滑动滑动条改变当前的文件名
+@app.callback(
+    Output('dropdown_files_list', 'value'),
+    [
+        Input('dropdown_datasets_list', 'value'),
+        # Input('dropdown_files_list', 'value'),
+        Input('slicer_images', 'value'),
+    ]
+)
+def slide_slider(dataset_name, idx):
+    print('func: slide_slider', dataset_name, idx)
+    ret = [
+        None
+    ]
+    if dataset_name is not None and idx is not None:
+        files_fns = uploaded_files(os.path.join(UPLOAD_DIRECTORY, dataset_name))
+        # img_fn = os.path.joint(UPLOAD_DIRECTORY, dataset_name, file_name)
+        # idx_query = files_fns.index(img_fn)
+
+        # if idx_query != idx:
+        #     current_img_fn = files_fns[idx]
+        #     ret[0] = os.path.basename(current_img_fn)
+        current_img_fn = files_fns[idx-1]
+        ret[0] = os.path.basename(current_img_fn)
+    print(ret[0])
+    return ret[0]
 
 
 # # 根据数据集名称, 更新图像数据列表和下拉列表
@@ -750,6 +785,7 @@ def upload_dataset(n_clicks, filenames, contents, dataset_name):
 #         return [], []
 
 # 选择具体数据集的图像文件
+# 由于dash限定一个输出对应一个回调函数， 所以所有关于图像的回调都在本函数中
 @app.callback(
     [
         Output('div_current_dataset', 'children'),
@@ -774,7 +810,7 @@ def display_current_dataset(dataset_name, file_name):
         'current file name: {}'.format(file_name),
         '',
         utils.FIGURE_PLACEHOLDER,  # 默认显示
-        dcc.Slider(disabled=True)
+        dcc.Slider(id="slicer_images", disabled=True)
     ]
 
     print("func display_current_dataset")
