@@ -73,7 +73,7 @@ if not os.path.exists(UPLOAD_DIRECTORY):
 ##############################################################################################
 # Helper functions
 ##############################################################################################
-def add_img_to_figure(image_code, height=600, width=1600, scale_factor=1):
+def add_img_to_figure(image_code, height=600, width=1600, scale_factor=1, figsize=(700, 700)):
     # Create figure
     fig = go.Figure()
 
@@ -130,7 +130,7 @@ def add_img_to_figure(image_code, height=600, width=1600, scale_factor=1):
         # width=img_width * scale_factor,
         # height=img_height * scale_factor,
         # width=600,
-        height=700,
+        height=figsize[0],
         margin={"l": 0, "r": 0, "t": 0, "b": 0},
         paper_bgcolor="#272a31",
         plot_bgcolor="#272a31",
@@ -194,7 +194,7 @@ def read_file(file_fn, file_format):
         print(file_fn, "-----------------", file_format)
         if file_format.lower() in {"png", "jpeg", "jpg", "bmp"}:
             d = np.array(imageio.imread(file_fn))
-            print("=================", type(d))
+            # print("=================", type(d))
         elif file_format.lower() in {"dcm"}:
             # import pydicom
             ds = pydicom.read_file(file_fn)
@@ -215,52 +215,66 @@ def read_file(file_fn, file_format):
 
 # 根据文件名来读取文件
 def get_image_data(file_fn, file_format, enc_format='png'):
+    image_data = {}
     
-    data = {
-        'fullname': file_fn,
-        'format': file_format
-    }
-
     img_decoded = None
     
     # 对于不同类型的数据分别处理
     d = read_file(file_fn, file_format)
+    image_data = __get_image_data(data=d, file_format=file_format, enc_format=enc_format)
+    
+    image_data['fullname'] = file_fn
+    print(image_data.keys())
+    return image_data
+
+def __get_image_data(data, file_format, enc_format):
+    image_data = {
+        'data':data,
+        'format': file_format
+    }
+
+    img_decoded = None
+    # print(type(data))
     # eg. xxx.png, shape(h, w)
-    if isinstance(d, np.ndarray):
+    if isinstance(data, np.ndarray):
         # 灰度图
         # gray image
-        if d.ndim==2:
-            img = d
-            h, w = d.shape[0], d.shape[1]
+        if data.ndim==2:
+            img = data
+            h, w = data.shape[0], data.shape[1]
             if_scalar = False if img.dtype==np.uint8 else True
-            img_encoded = numpy_to_b64(d, enc_format=enc_format, scalar=if_scalar)
+            img_encoded = numpy_to_b64(data, enc_format=enc_format, scalar=if_scalar)
             img_decoded = 'data:image/{};base64,{}'.format(enc_format, img_encoded)
-            data['ndim'] = 2
-            data['width'] = w
-            data['height'] = h
-            data['encoded_b64'] = img_encoded
-            data['decoded_b64'] = img_decoded
-        elif d.ndim==3:
+            
+            image_data['ndim'] = 2
+            image_data['width'] = w
+            image_data['height'] = h
+            image_data['encoded_b64'] = img_encoded
+            image_data['decoded_b64'] = img_decoded
+        elif data.ndim==3:
             # 可能是彩图等多通道图, 也可能是3D图
-            if d.shape[2] in {1, 3, 4}:
-                img = d.squeeze()
-                h, w = d.shape[0], d.shape[1]
+            if data.shape[2] in {1, 3, 4}:
+                img = data.squeeze()
+                h, w = data.shape[0], data.shape[1]
                 if_scalar = False if img.dtype==np.uint8 else True
-                img_encoded = numpy_to_b64(d, enc_format=enc_format, scalar=if_scalar)
+                img_encoded = numpy_to_b64(data, enc_format=enc_format, scalar=if_scalar)
                 img_decoded = 'data:image/{};base64,{}'.format(enc_format, img_encoded)
-                data['ndim'] = 3
-                data['width'] = w
-                data['height'] = h
-                data['encoded_b64'] = img_encoded
-                data['decoded_b64'] = img_decoded
+                
+                image_data['ndim'] = 3
+                image_data['width'] = w
+                image_data['height'] = h
+                image_data['encoded_b64'] = img_encoded
+                image_data['decoded_b64'] = img_decoded
                 print("--------------------3")
             else:  # 3D图
                 pass 
             pass
-    elif isinstance(d, str):  # 3D or 4D图
+    elif isinstance(data, str):  # 3D or 4D图
         pass
 
-    return data
+    return image_data
+
+
 #########################################################################################
 
 def get_app_layout(session_id):
@@ -509,6 +523,28 @@ html.Div(
                                     html.Pre(id='selected-data', style=styles['pre']),
                                     # 选择的区域
                                     html.Pre(id='relayout-data', style=styles['pre']),
+
+# 选择的区域
+dcc.Graph(
+    id="graph_croped",
+    figure={
+        "data": [
+            {
+                'x': [0, 150], 'y': [0, 150], 'type': 'scatter', 
+                'mode':"markers",
+                'marker_opacity':0
+            }
+        ],
+        "layout": {
+            "paper_bgcolor": "#272a31",
+            "plot_bgcolor": "#272a31",
+            "height":250,
+            "margin": dict(l=0, t=0, r=0, b=0),
+        }
+    },
+    config={"displayModeBar": False},
+),
+
                                     drc.CustomDropdown(
                                         id="dropdown-filters",
                                         options=[
@@ -556,6 +592,8 @@ html.Div(
                                         searchable=False,
                                         placeholder="Basic Filter...",
                                     ),
+
+
                                     drc.CustomDropdown(
                                         id="dropdown-enhance",
                                         options=[
@@ -579,6 +617,7 @@ html.Div(
                                         searchable=False,
                                         placeholder="Enhance...",
                                     ),
+
                                     html.Div(
                                         id="div-enhancement-factor",
                                         children=[
@@ -691,7 +730,7 @@ def select_upload_format(item):
     ]
 )
 def upload_dataset(n_clicks, filenames, contents, dataset_name):
-    print('func: upload_dataset', dataset_name)
+    print('===============================func: upload_dataset', dataset_name)
     if filenames is not None and contents is not None:
         for fn in filenames:
             print(f'filename: {fn}')
@@ -738,7 +777,7 @@ def upload_dataset(n_clicks, filenames, contents, dataset_name):
     ]
 )
 def slide_slider(dataset_name, idx):
-    print('func: slide_slider', dataset_name, idx)
+    print('===============================func: slide_slider', dataset_name, idx)
     ret = [
         None
     ]
@@ -813,7 +852,7 @@ def display_current_dataset(dataset_name, file_name):
         dcc.Slider(id="slicer_images", disabled=True)
     ]
 
-    print("func display_current_dataset")
+    print("===============================func： display_current_dataset")
     print(dataset_name, file_name)
     if dataset_name is not None:
         ret_dropdown_files_list = []
@@ -839,17 +878,22 @@ def display_current_dataset(dataset_name, file_name):
                 idx = files_fns.index(current_file)
                 
                 num_imgs = len(files_fns)
-                step  = 1 if num_imgs<101 else num_imgs//10
+                #step  = 1 if num_imgs<101 else num_imgs//10
                 print("current file:{} idx: {}/{}".format(current_file, idx, num_imgs))
+                if num_imgs<101:
+                    marks = {str(i+1): str(i+1) for i in range(0, num_imgs, 1)}
+                else:
+                    marks = {str(i+1): str(i+1) for i in range(0, num_imgs, num_imgs//10)}
+
                 slider_images = dcc.Slider(
                     id="slicer_images",
                         min=1,
                         max=num_imgs,
                         value=idx+1,
-                        step=step,
-                        marks={str(i+1): str(i+1) for i in range(0, num_imgs, 1)}
+                        step=1,
+                        marks=marks
                 )
-                print({str(i+1): str(i+1) for i in range(0, num_imgs, 1)})
+                print(marks)
                 ret[5] = slider_images
 
 
@@ -870,6 +914,7 @@ def display_current_dataset(dataset_name, file_name):
 #         figure["layout"]["dragmode"] = selection_mode
 #     return figure
 
+
 @app.callback(
     Output('selected-data', 'children'),
     [Input('interactive_image', 'selectedData')])
@@ -886,6 +931,50 @@ def display_selected_data(selectedData):
 def display_relayout_data(relayoutData):
     # print("display_relayout_data")
     return json.dumps(relayoutData, indent=2)
+
+# # 测试获取要分割区域
+# @app.callback(
+#     Output('graph_croped', 'figure'),
+#     [
+#         Input('dropdown_datasets_list', 'value'),
+#         Input('dropdown_files_list', 'value'),
+#         Input('interactive_image', 'selectedData')
+#     ]
+# )
+# def display_croped_image(dataset_name, file_name, selectedData):
+#     print('===============================func: display_croped_image')
+#     print(dataset_name, file_name, selectedData)
+#     ret = [
+#         go.Figure(
+
+#         )
+#     ]
+
+#     if selectedData:
+#         x_min, x_max = selectedData['range']['x']
+#         y_min, y_max = selectedData['range']['y']
+#         if dataset_name is not None and file_name is not None:
+            
+#             current_file = os.path.join(UPLOAD_DIRECTORY, dataset_name, file_name)
+#             file_format = '.'.join(file_name.split('.')[1:])
+
+#             img = read_file(current_file, file_format)
+#             print(type(img), img.shape)
+            
+#             # 处理：裁剪图像
+#             # 注意坐标传回来首先都是str类型
+#             x_min, x_max, y_min, y_max = int(x_min), int(x_max), int(y_min), int(y_max)
+#             img_croped = img[int(x_min):x_max, y_min:y_max, :]
+#             print(type(img_croped), img_croped.shape)
+
+#             img_data = __get_image_data(data=img_croped, file_format=file_format, enc_format='png')
+            
+#             if 'decoded_b64' in img_data.keys():
+#                 img_decoded = img_data['decoded_b64']
+#                 fig = add_img_to_figure(img_decoded, height=250, width=250, figsize=(250, 250))
+#                 ret[0] = fig
+
+#         return ret[0]
 
 
 # Running the server

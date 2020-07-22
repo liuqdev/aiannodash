@@ -31,7 +31,7 @@ b64_decoded='data:image/png;base64,{}'.format(b64)
 
 
 
-def get_figure_placeholder(img_height, img_width, b64_decoded=b64_decoded):       
+def get_figure_placeholder(img_height, img_width, b64_decoded=b64_decoded):
     # Constants
     img_height, img_width = 800, 1200
     scale_factor = 1
@@ -83,7 +83,7 @@ def get_figure_placeholder(img_height, img_width, b64_decoded=b64_decoded):
 
     # Configure other layout
     fig.update_layout(
-        # clickmode='event+select',
+        clickmode='event+select',
         # width=img_width * scale_factor,
         # height=img_height * scale_factor,
         # width=600,
