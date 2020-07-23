@@ -91,7 +91,8 @@ def get_figure_placeholder(img_height, img_width, b64_decoded=b64_decoded):
         margin={"l": 0, "r": 0, "t": 0, "b": 0},
         paper_bgcolor="#272a31",
         plot_bgcolor="#272a31",
-        # autosize=True
+        # autosize=True,
+        # dragmode='drawrect'
     )
  # fig = go.Figure(
     #     dict({

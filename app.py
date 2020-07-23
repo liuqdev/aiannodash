@@ -9,6 +9,7 @@ import pathlib
 import base64
 import glob
 import requests
+from urllib.parse import quote as urlquote
 
 import numpy as np
 import pydicom
@@ -217,7 +218,7 @@ def read_file(file_fn, file_format):
 def get_image_data(file_fn, file_format, enc_format='png'):
     image_data = {}
     
-    img_decoded = None
+    # img_decoded = None
     
     # 对于不同类型的数据分别处理
     d = read_file(file_fn, file_format)
@@ -265,7 +266,7 @@ def __get_image_data(data, file_format, enc_format):
                 image_data['height'] = h
                 image_data['encoded_b64'] = img_encoded
                 image_data['decoded_b64'] = img_decoded
-                print("--------------------3")
+                # print("--------------------3")
             else:  # 3D图
                 pass 
             pass
@@ -337,9 +338,9 @@ html.Div(
                                     # ),
 
 
-                                    html.Img(
-                                        id="img_show",
-                                    ),
+                                    # html.Img(
+                                    #     id="img_show",
+                                    # ),
 
                                     html.Div(
                                         id="div-storage",
@@ -523,125 +524,144 @@ html.Div(
                                     html.Pre(id='selected-data', style=styles['pre']),
                                     # 选择的区域
                                     html.Pre(id='relayout-data', style=styles['pre']),
-
-# 选择的区域
-dcc.Graph(
-    id="graph_croped",
-    figure={
-        "data": [
-            {
-                'x': [0, 150], 'y': [0, 150], 'type': 'scatter', 
-                'mode':"markers",
-                'marker_opacity':0
-            }
-        ],
-        "layout": {
-            "paper_bgcolor": "#272a31",
-            "plot_bgcolor": "#272a31",
-            "height":250,
-            "margin": dict(l=0, t=0, r=0, b=0),
+html.Div(
+    id='div_minimap',
+    children=[
+    html.Img(
+        id="img_show",
+        style={
+            "margin": "auto",
+            "max-width": "100%",
         }
-    },
-    config={"displayModeBar": False},
+    )
+    ],
+    style={
+        "margin": "auto",
+        "height":"250px",
+        "width": "250px",
+    }
 ),
 
-                                    drc.CustomDropdown(
-                                        id="dropdown-filters",
-                                        options=[
-                                            {
-                                                "label": "Blur",
-                                                "value": "blur"
-                                            },
-                                            {
-                                                "label": "Contour",
-                                                "value": "contour"
-                                            },
-                                            {
-                                                "label": "Detail",
-                                                "value": "detail"
-                                            },
-                                            {
-                                                "label": "Enhance Edge",
-                                                "value": "edge_enhance"
-                                            },
-                                            {
-                                                "label": "Enhance Edge (More)",
-                                                "value": "edge_enhance_more",
-                                            },
-                                            {
-                                                "label": "Emboss",
-                                                "value": "emboss"
-                                            },
-                                            {
-                                                "label": "Find Edges",
-                                                "value": "find_edges"
-                                            },
-                                            {
-                                                "label": "Sharpen",
-                                                "value": "sharpen"
-                                            },
-                                            {
-                                                "label": "Smooth",
-                                                "value": "smooth"
-                                            },
-                                            {
-                                                "label": "Smooth (More)",
-                                                "value": "smooth_more"
-                                            },
-                                        ],
-                                        searchable=False,
-                                        placeholder="Basic Filter...",
-                                    ),
+# # 选择的区域
+# dcc.Graph(
+#     id="graph_croped",
+#     figure={
+#         "data": [
+#             {
+#                 'x': [0, 150], 'y': [0, 150], 'type': 'scatter', 
+#                 'mode':"markers",
+#                 'marker_opacity':0
+#             }
+#         ],
+#         "layout": {
+#             "paper_bgcolor": "#272a31",
+#             "plot_bgcolor": "#272a31",
+#             "height":250,
+#             "margin": dict(l=0, t=0, r=0, b=0),
+#         }
+#     },
+#     config={"displayModeBar": False},
+# ),
+
+                                    # drc.CustomDropdown(
+                                    #     id="dropdown-filters",
+                                    #     options=[
+                                    #         {
+                                    #             "label": "Blur",
+                                    #             "value": "blur"
+                                    #         },
+                                    #         {
+                                    #             "label": "Contour",
+                                    #             "value": "contour"
+                                    #         },
+                                    #         {
+                                    #             "label": "Detail",
+                                    #             "value": "detail"
+                                    #         },
+                                    #         {
+                                    #             "label": "Enhance Edge",
+                                    #             "value": "edge_enhance"
+                                    #         },
+                                    #         {
+                                    #             "label": "Enhance Edge (More)",
+                                    #             "value": "edge_enhance_more",
+                                    #         },
+                                    #         {
+                                    #             "label": "Emboss",
+                                    #             "value": "emboss"
+                                    #         },
+                                    #         {
+                                    #             "label": "Find Edges",
+                                    #             "value": "find_edges"
+                                    #         },
+                                    #         {
+                                    #             "label": "Sharpen",
+                                    #             "value": "sharpen"
+                                    #         },
+                                    #         {
+                                    #             "label": "Smooth",
+                                    #             "value": "smooth"
+                                    #         },
+                                    #         {
+                                    #             "label": "Smooth (More)",
+                                    #             "value": "smooth_more"
+                                    #         },
+                                    #     ],
+                                    #     searchable=False,
+                                    #     placeholder="Basic Filter...",
+                                    # ),
 
 
-                                    drc.CustomDropdown(
-                                        id="dropdown-enhance",
-                                        options=[
-                                            {
-                                                "label": "Brightness",
-                                                "value": "brightness"
-                                            },
-                                            {
-                                                "label": "Color Balance",
-                                                "value": "color"
-                                            },
-                                            {
-                                                "label": "Contrast",
-                                                "value": "contrast"
-                                            },
-                                            {
-                                                "label": "Sharpness",
-                                                "value": "sharpness"
-                                            },
-                                        ],
-                                        searchable=False,
-                                        placeholder="Enhance...",
-                                    ),
+                                    # drc.CustomDropdown(
+                                    #     id="dropdown-enhance",
+                                    #     options=[
+                                    #         {
+                                    #             "label": "Brightness",
+                                    #             "value": "brightness"
+                                    #         },
+                                    #         {
+                                    #             "label": "Color Balance",
+                                    #             "value": "color"
+                                    #         },
+                                    #         {
+                                    #             "label": "Contrast",
+                                    #             "value": "contrast"
+                                    #         },
+                                    #         {
+                                    #             "label": "Sharpness",
+                                    #             "value": "sharpness"
+                                    #         },
+                                    #     ],
+                                    #     searchable=False,
+                                    #     placeholder="Enhance...",
+                                    # ),
 
-                                    html.Div(
-                                        id="div-enhancement-factor",
-                                        children=[
-                                            f"Enhancement Factor:",
-                                            html.Div(children=dcc.Slider(
-                                                id="slider-enhancement-factor",
-                                                min=0,
-                                                max=2,
-                                                step=0.1,
-                                                value=1,
-                                                updatemode="drag",
-                                            )),
-                                        ],
-                                    ),
-                                    html.Div(
-                                        id="button-group",
-                                        children=[
-                                            html.Button(
-                                                "Run Operation",
-                                                id="button-run-operation"),
-                                            html.Button("Undo",
-                                                        id="button-undo"),
-                                        ],
-                                    ),
+                                    # html.Div(
+                                    #     id="div-enhancement-factor",
+                                    #     children=[
+                                    #         f"Enhancement Factor:",
+                                    #         html.Div(children=dcc.Slider(
+                                    #             id="slider-enhancement-factor",
+                                    #             min=0,
+                                    #             max=2,
+                                    #             step=0.1,
+                                    #             value=1,
+                                    #             updatemode="drag",
+                                    #         )),
+                                    #     ],
+                                    # ),
+
+                                    # html.Div(
+                                    #     id="button-group",
+                                    #     children=[
+                                    #         html.Button(
+                                    #             "Run Operation",
+                                    #             id="button-run-operation"),
+                                    #         html.Button("Undo",
+                                    #                     id="button-undo"),
+                                    #     ],
+                                    # ),
+
                                 ]),
                             ]),
                         dcc.Tab(label="Tab three", children=[]),
@@ -832,17 +852,18 @@ def slide_slider(dataset_name, idx):
         Output('div_current_file', 'children'),        
         Output('img_show', 'src'),
         Output('interactive_image', 'figure'),
-        Output('div_slicer', 'children')
+        Output('div_slicer', 'children'),
     ],
     [
         Input('dropdown_datasets_list', 'value'),
-        Input('dropdown_files_list', 'value')
+        Input('dropdown_files_list', 'value'),
+        Input('interactive_image', 'selectedData')
     ],
     # [
-    #     State('dropdown_files_list', 'value')
+    #     State('interactive_image', 'selectedData')
     # ]
 )
-def display_current_dataset(dataset_name, file_name):
+def display_current_dataset(dataset_name, file_name, selected_data):
     ret = [
         'current dataset name: {}'.format(dataset_name),
         [],
@@ -871,9 +892,33 @@ def display_current_dataset(dataset_name, file_name):
             print(img_data.keys())
             
             if 'decoded_b64' in img_data.keys():
-                ret[3] = img_data['decoded_b64']
+                # ret[3] = img_data['decoded_b64']
                 fig = add_img_to_figure(img_data['decoded_b64'], height=img_data['height'], width=img_data['width'])
                 ret[4] = fig
+
+                # 图像处理
+                print("selected_data", selected_data)
+                if selected_data:                    
+                    img = img_data['data']
+
+                    # 获取得到的坐标
+                    lower, upper = map(int, selected_data["range"]["y"])
+                    left, right = map(int, selected_data["range"]["x"])
+                    # # Adjust height difference
+                    # height = img.shape[1]
+                    # upper = height - upper
+                    # lower = height - lower
+                    # selection_zone = (left, upper, right, lower)
+                    
+                    img_croped = img[lower:upper, left:right, :]
+                    print(left, right, lower, upper)
+                    print(type(img_croped), img_croped.shape)
+                    img_croped_data = __get_image_data(data=img_croped, file_format=file_format, enc_format='png')
+                    if 'decoded_b64' in img_croped_data.keys():
+                        img_croped_decoded = img_croped_data['decoded_b64']
+                        #fig_croped = add_img_to_figure(img_croped_decoded, height=250, width=250, figsize=(250, 250))
+                        ret[3] = img_croped_decoded
+
 
                 idx = files_fns.index(current_file)
                 
