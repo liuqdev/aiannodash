@@ -14,6 +14,7 @@ from urllib.parse import quote as urlquote
 import numpy as np
 import pydicom
 import imageio
+import skimage
 import cv2
 import nibabel as nib
 import boto3
@@ -28,7 +29,8 @@ from flask_caching import Cache
 
 import dash_reusable_components as drc
 import utils
-from utils import numpy_to_b64
+from utils import numpy_to_b64, rescale
+from unsupervised_models import kmeans_seg, get_subplots_fig
 
 #################################################################################
 # Application Configuration
@@ -101,7 +103,7 @@ def add_img_to_figure(image_code, height=600, width=1600, scale_factor=1, figsiz
     )
 
     fig.update_yaxes(
-        visible=True,
+        visible=False,
         #range=[0, img_height * scale_factor],
         range=[img_height * scale_factor, 0],  # 调整坐标范围用
         # the scaleanchor attribute ensures that the aspect ratio stays constant
@@ -664,7 +666,10 @@ html.Div(
 
                                 ]),
                             ]),
-                        dcc.Tab(label="Tab three", children=[]),
+                        dcc.Tab(label="Models", children=[
+
+
+                        ]),
                     ]),
                 ],
             ),
@@ -904,20 +909,51 @@ def display_current_dataset(dataset_name, file_name, selected_data):
                     # 获取得到的坐标
                     lower, upper = map(int, selected_data["range"]["y"])
                     left, right = map(int, selected_data["range"]["x"])
+                    # 确保x, y落在图像内部
+                    lower, upper, left, right = max(lower, 0), max(upper, 0), max(left, 0), max(right, 0)
+                    w, h = img_data['width'], img_data['height']
+                    lower, upper, left, right = min(lower, h), min(upper, h), min(left, w), min(right, w)
+                    if lower+upper+left+right==0:
+                        lower, upper, left, right = 0, h, 0, w
+                    zone = (lower, upper, left, right)
+                    print(zone)
+                    
+                    ds = kmeans_seg(img, zone)
+                    
+                    croped = rescale(img[lower:upper+1, left:right+1])
+                    dialated = rescale(ds['image_dilated'][lower:upper+1, left:right+1])
+                    # dialated = skimage.color.label2rgb(dialated)
+                    dialated = dialated
+
+                    # 显示子图, 原图, 腐蚀处理后的, 颜色标签, 叠加(contour)
+                    labels = rescale(ds['image_labels'][lower:upper+1, left:right+1])
+                    mask_applied = rescale(ds['mask_applied'][lower:upper+1, left:right+1])
+                                        
+                    fig = get_subplots_fig(2, 2, [croped, dialated, labels, mask_applied])
+                    ret[4] = fig
+
+                    # 显示结果
+                    img_croped_data = __get_image_data(data=mask_applied, file_format=file_format, enc_format='png')
+                    if 'decoded_b64' in img_croped_data.keys():
+                        img_croped_decoded = img_croped_data['decoded_b64']
+                        #fig_croped = add_img_to_figure(img_croped_decoded, height=250, width=250, figsize=(250, 250))
+                        ret[3] = img_croped_decoded
+
+
                     # # Adjust height difference
                     # height = img.shape[1]
                     # upper = height - upper
                     # lower = height - lower
                     # selection_zone = (left, upper, right, lower)
                     
-                    img_croped = img[lower:upper, left:right, :]
-                    print(left, right, lower, upper)
-                    print(type(img_croped), img_croped.shape)
-                    img_croped_data = __get_image_data(data=img_croped, file_format=file_format, enc_format='png')
-                    if 'decoded_b64' in img_croped_data.keys():
-                        img_croped_decoded = img_croped_data['decoded_b64']
-                        #fig_croped = add_img_to_figure(img_croped_decoded, height=250, width=250, figsize=(250, 250))
-                        ret[3] = img_croped_decoded
+                    # img_croped = img[lower:upper, left:right, :]
+                    # print(left, right, lower, upper)
+                    # print(type(img_croped), img_croped.shape)
+                    # img_croped_data = __get_image_data(data=img_croped, file_format=file_format, enc_format='png')
+                    # if 'decoded_b64' in img_croped_data.keys():
+                    #     img_croped_decoded = img_croped_data['decoded_b64']
+                    #     #fig_croped = add_img_to_figure(img_croped_decoded, height=250, width=250, figsize=(250, 250))
+                    #     ret[3] = img_croped_decoded
 
 
                 idx = files_fns.index(current_file)

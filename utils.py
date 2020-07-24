@@ -2,6 +2,7 @@ import os
 import pathlib
 import json
 
+import numpy as np
 import imageio
 import cv2
 import dash_core_components as dcc
@@ -348,3 +349,8 @@ def show_histogram(image):
     return go.Figure(data=data, layout=layout)
 
 
+def rescale(image_2d):
+    image_2d_scaled=image_2d.astype(np.double)
+    image_2d_scaled=(image_2d_scaled-image_2d_scaled.min())/(image_2d_scaled.max()-image_2d_scaled.min())
+    image_2d_scaled=(255*image_2d_scaled).astype(np.uint8)
+    return image_2d_scaled
