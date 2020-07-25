@@ -8,3 +8,7 @@ data
 .vscode
 .ipynb_checkpoints
 app_uploaded_files
+pretrained
+tests/dicom_series
+tests/dicom_series2
+tests/series_output

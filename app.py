@@ -48,21 +48,23 @@ APP_PATH = str(pathlib.Path(__file__).parent.resolve())
 server = Flask(__name__)
 app = dash.Dash(server=server)
 
+
 @server.route("/download/<path:path>")
 def download(path):
     """Serve a file from the upload directory."""
     return send_from_directory(UPLOAD_DIRECTORY, path, as_attachment=True)
 
+
 styles = {
     'pre': {
         'border': 'thin lightgrey solid',
         'overflowX': 'scroll',
-        "height":"100px",
+        "height": "100px",
     },
-    'Ul':{
-        "height":"100px",
-        "overflow":"hidden",
-        "overflow-y":"scroll"
+    'Ul': {
+        "height": "100px",
+        "overflow": "hidden",
+        "overflow-y": "scroll"
     }
 }
 
@@ -113,17 +115,17 @@ def add_img_to_figure(image_code, height=600, width=1600, scale_factor=1, figsiz
     # Add image
     fig.add_layout_image(
         dict(
-        x=0,
-        sizex=img_width * scale_factor,
-        #y=img_height * scale_factor,
-        y=0,
-        sizey=img_height * scale_factor,
-        xref="x",
-        yref="y",
-        opacity=1.0,
-        layer="below",
-        sizing="stretch",
-        source=image_code
+            x=0,
+            sizex=img_width * scale_factor,
+            #y=img_height * scale_factor,
+            y=0,
+            sizey=img_height * scale_factor,
+            xref="x",
+            yref="y",
+            opacity=1.0,
+            layer="below",
+            sizing="stretch",
+            source=image_code
         )
     )
 
@@ -141,19 +143,22 @@ def add_img_to_figure(image_code, height=600, width=1600, scale_factor=1, figsiz
     )
     return fig
 
+
 def get_dropdown_datasets_list():
     ret_dropdown_datasets_list = []
     datasets_list = uploaded_dirs(UPLOAD_DIRECTORY, "/*")
     print(datasets_list)
     for dataset_fn in datasets_list:
         dataset_basename = os.path.basename(dataset_fn)
-    ret_dropdown_datasets_list.append({'label': dataset_basename, 'value': dataset_basename})
+    ret_dropdown_datasets_list.append(
+        {'label': dataset_basename, 'value': dataset_basename})
     return ret_dropdown_datasets_list
+
 
 def mkdir(dir_name):
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
-            
+
 
 # 原样保存文件
 def save_file(name, content):
@@ -163,6 +168,8 @@ def save_file(name, content):
         fp.write(base64.decodebytes(data))
 
 # 显示已经上传的数据集的名称
+
+
 def uploaded_dirs(path, pattern="/*"):
     dirs_fns = []
     for fn in glob.glob(path+pattern):
@@ -171,6 +178,8 @@ def uploaded_dirs(path, pattern="/*"):
     return dirs_fns
 
 # 显示已经上传的文件夹中的文件
+
+
 def uploaded_files(path, pattern="/*"):
     """List the files in the upload directory."""
     files_fns = []
@@ -180,6 +189,8 @@ def uploaded_files(path, pattern="/*"):
     return files_fns
 
 # 创建下载链接
+
+
 def file_download_link(filename):
     """Create a Plotly Dash 'A' element that downloads a file from the app."""
     location = "/download/{}".format(urlquote(filename))
@@ -204,10 +215,10 @@ def read_file(file_fn, file_format):
             # img = ds.pixel_array
             d = ds
         elif file_format.lower() in {"nii", 'nii.gz'}:  # 3D/4D files
-            import nibabel as nib  
+            import nibabel as nib
             d = nib.load(file_fn)
         elif file_format.lower() in {'npy'}:
-            
+
             d = np.load(file_fn)
         else:
             # TODO: 使用medoy支持更多类型的医学数据
@@ -217,22 +228,26 @@ def read_file(file_fn, file_format):
         print("File Reading error !", e)
 
 # 根据文件名来读取文件
+
+
 def get_image_data(file_fn, file_format, enc_format='png'):
     image_data = {}
-    
+
     # img_decoded = None
-    
+
     # 对于不同类型的数据分别处理
     d = read_file(file_fn, file_format)
-    image_data = __get_image_data(data=d, file_format=file_format, enc_format=enc_format)
-    
+    image_data = __get_image_data(
+        data=d, file_format=file_format, enc_format=enc_format)
+
     image_data['fullname'] = file_fn
     print(image_data.keys())
     return image_data
 
+
 def __get_image_data(data, file_format, enc_format):
     image_data = {
-        'data':data,
+        'data': data,
         'format': file_format
     }
 
@@ -242,27 +257,31 @@ def __get_image_data(data, file_format, enc_format):
     if isinstance(data, np.ndarray):
         # 灰度图
         # gray image
-        if data.ndim==2:
+        if data.ndim == 2:
             img = data
             h, w = data.shape[0], data.shape[1]
-            if_scalar = False if img.dtype==np.uint8 else True
-            img_encoded = numpy_to_b64(data, enc_format=enc_format, scalar=if_scalar)
-            img_decoded = 'data:image/{};base64,{}'.format(enc_format, img_encoded)
-            
+            if_scalar = False if img.dtype == np.uint8 else True
+            img_encoded = numpy_to_b64(
+                data, enc_format=enc_format, scalar=if_scalar)
+            img_decoded = 'data:image/{};base64,{}'.format(
+                enc_format, img_encoded)
+
             image_data['ndim'] = 2
             image_data['width'] = w
             image_data['height'] = h
             image_data['encoded_b64'] = img_encoded
             image_data['decoded_b64'] = img_decoded
-        elif data.ndim==3:
+        elif data.ndim == 3:
             # 可能是彩图等多通道图, 也可能是3D图
             if data.shape[2] in {1, 3, 4}:
                 img = data.squeeze()
                 h, w = data.shape[0], data.shape[1]
-                if_scalar = False if img.dtype==np.uint8 else True
-                img_encoded = numpy_to_b64(data, enc_format=enc_format, scalar=if_scalar)
-                img_decoded = 'data:image/{};base64,{}'.format(enc_format, img_encoded)
-                
+                if_scalar = False if img.dtype == np.uint8 else True
+                img_encoded = numpy_to_b64(
+                    data, enc_format=enc_format, scalar=if_scalar)
+                img_decoded = 'data:image/{};base64,{}'.format(
+                    enc_format, img_encoded)
+
                 image_data['ndim'] = 3
                 image_data['width'] = w
                 image_data['height'] = h
@@ -270,7 +289,7 @@ def __get_image_data(data, file_format, enc_format):
                 image_data['decoded_b64'] = img_decoded
                 # print("--------------------3")
             else:  # 3D图
-                pass 
+                pass
             pass
     elif isinstance(data, str):  # 3D or 4D图
         pass
@@ -310,35 +329,61 @@ def get_app_layout(session_id):
                             html.Div(
                                 id="div-interactive_image",
                                 children=[
+
+                                    html.Div(
+                                        id='div_switch',
+                                        children=[
+                                            html.Button("2D", id="btn_2d"),
+                                            html.Button(
+                                                "3D Slices", id="btn_3d_slices"),
+                                            html.Button(
+                                                "3D Surface", id="btn_3d_surface"),
+                                            html.Button(
+                                                "3D Volume", id="btn_3d_volume"),
+                                        ]
+                                    ),
+
+                                    html.Div(
+                                        id="div_slices_view",
+                                        children=[
+                                            # html.Button("Transverse", id="btn_transverse"),
+                                            # html.Button("Coronal", id="btn_coronal"),
+                                            # html.Button("Saggital", id="btn_saggital"),
+                                            dcc.Dropdown(
+                                                id='dropdown_slices_view',
+                                                options=[
+                                                    {'label': 'Transverse',
+                                                        'value': 'transverse'},
+                                                    {'label': 'Coronal',
+                                                        'value': 'coronal', 'disabled': True},
+                                                    {'label': 'Saggital',
+                                                        'value': 'saggital', 'disabled': True}
+                                                ],
+                                                value=['transverse'],
+                                                multi=True,
+                                                placeholder="Select a view (views)",
+                                            )
+
+                                        ],
+                                    ),
+
+
                                     # utils.GRAPH_PLACEHOLDER,
 
                                     # main graph
                                     # 主要的显示区
                                     dcc.Graph(
                                         id="interactive_image",
-                                        
+
                                     ),
 
-html.Div(
-    id='div_slicer',
-    children=[
-        dcc.Slider(id="slicer_images", disabled=True)
-    ]
-),
-
-                                    # dcc.Slider(
-                                    #     id="slicer_images",
-                                    #         min=0,
-                                    #         max=100,
-                                    #         value=65,
-                                    #         marks={
-                                    #             0: {'label': '0 °C', 'style': {'color': '#77b0b1'}},
-                                    #             26: {'label': '26 °C'},
-                                    #             37: {'label': '37 °C'},
-                                    #             100: {'label': '100 °C', 'style': {'color': '#f50'}}
-                                    #         }
-                                    # ),
-
+                                    html.Div(
+                                        id='div_slicer',
+                                        children=[
+                                            dcc.Slider(
+                                                id="slicer_images", disabled=True)
+                                        ]
+                                    ),
 
                                     # html.Img(
                                     #     id="img_show",
@@ -427,13 +472,12 @@ html.Div(
                                         #accept="image/png, image/jpeg, image/jpg",
                                         # accept='.dcm, .nii',
                                         accept="image/*",
-                                        multiple=
-                                        True,  # support multiple files uploading
+                                        multiple=True,  # support multiple files uploading
                                     ),
                                     # 显示上传的文件列表
-                                    html.Ul(id="ul_file_list", 
-                                        style=styles['Ul']
-                                    ),
+                                    html.Ul(id="ul_file_list",
+                                            style=styles['Ul']
+                                            ),
 
                                     # 输入数据集的名称
                                     # save input image(s) as an dataset
@@ -443,71 +487,52 @@ html.Div(
                                         placeholder='Input dataset name'
                                     ),
                                     # 确认
-                                    html.Button(id='btn_upload', n_clicks=0, children='Upload'),
+                                    html.Button(id='btn_upload',
+                                                n_clicks=0, children='Upload'),
 
                                 ]),
+
                                 drc.Card([
                                     html.Div(
-                                    id="file_menu",
-                                    children=[
-                                        
-                                        html.Div(
-                                            id='div_current_dataset'
-                                        ),
+                                        id="file_menu",
+                                        children=[
 
-                                        # 数据集名称
-                                        # Dataset slection
-                                        dcc.Dropdown(
-                                            id='dropdown_datasets_list',
-                                            
-                                            style={
-                                                # 'width': '50%',
-                                                # 'display': 'inline-block'
-                                            },
-                                            placeholder="Select a dataset",
-                                        ),
+                                            html.Div(
+                                                id='div_current_dataset'
+                                            ),
 
-                                        html.Div(
-                                            id='div_current_file'
-                                        ),
-                                        # 选择文件
-                                        # file selection
-                                        dcc.Dropdown(
-                                            id='dropdown_files_list',
-                                            # options=[{
-                                            #     'label': '',
-                                            #     'value': ''
-                                            # }],
-                                            style={
-                                                # 'width': '50%',
-                                                # 'display': 'inline-block'
-                                            },
-                                            placeholder="Select a file",
-                                        )
-                                    ]),
+                                            # 数据集名称
+                                            # Dataset slection
+                                            dcc.Dropdown(
+                                                id='dropdown_datasets_list',
+
+                                                style={
+                                                    # 'width': '50%',
+                                                    # 'display': 'inline-block'
+                                                },
+                                                placeholder="Select a dataset",
+                                            ),
+
+                                            html.Div(
+                                                id='div_current_file'
+                                            ),
+                                            # 选择文件
+                                            # file selection
+                                            dcc.Dropdown(
+                                                id='dropdown_files_list',
+                                                # options=[{
+                                                #     'label': '',
+                                                #     'value': ''
+                                                # }],
+                                                style={
+                                                    # 'width': '50%',
+                                                    # 'display': 'inline-block'
+                                                },
+                                                placeholder="Select a file",
+                                            )
+                                        ]),
                                 ]),
 
-                                # dcc.Graph(
-                                #     id="graph-histogram-colors",
-                                #     figure={
-                                #         "layout": {
-                                #             "paper_bgcolor": "#272a31",
-                                #             "plot_bgcolor": "#272a31",
-                                #         }
-                                #     },
-                                #     config={"displayModeBar": False},
-                                # ),
-
-                                # dcc.Graph(
-                                #     id="graph-histogram-colors2",
-                                #     figure={
-                                #         "layout": {
-                                #             "paper_bgcolor": "#272a31",
-                                #             "plot_bgcolor": "#272a31",
-                                #         }
-                                #     },
-                                #     config={"displayModeBar": False},
-                                # ),
                             ]),
                         dcc.Tab(
                             label="Tools",
@@ -526,148 +551,121 @@ html.Div(
                                     html.Pre(id='selected-data', style=styles['pre']),
                                     # 选择的区域
                                     html.Pre(id='relayout-data', style=styles['pre']),
-html.Div(
-    id='div_minimap',
-    children=[
-    html.Img(
-        id="img_show",
-        style={
-            "margin": "auto",
-            "max-width": "100%",
-        }
-    )
-    ],
-    style={
-        "margin": "auto",
-        "height":"250px",
-        "width": "250px",
-    }
-),
 
-# # 选择的区域
-# dcc.Graph(
-#     id="graph_croped",
-#     figure={
-#         "data": [
-#             {
-#                 'x': [0, 150], 'y': [0, 150], 'type': 'scatter', 
-#                 'mode':"markers",
-#                 'marker_opacity':0
-#             }
-#         ],
-#         "layout": {
-#             "paper_bgcolor": "#272a31",
-#             "plot_bgcolor": "#272a31",
-#             "height":250,
-#             "margin": dict(l=0, t=0, r=0, b=0),
-#         }
-#     },
-#     config={"displayModeBar": False},
-# ),
 
-                                    # drc.CustomDropdown(
-                                    #     id="dropdown-filters",
-                                    #     options=[
-                                    #         {
-                                    #             "label": "Blur",
-                                    #             "value": "blur"
-                                    #         },
-                                    #         {
-                                    #             "label": "Contour",
-                                    #             "value": "contour"
-                                    #         },
-                                    #         {
-                                    #             "label": "Detail",
-                                    #             "value": "detail"
-                                    #         },
-                                    #         {
-                                    #             "label": "Enhance Edge",
-                                    #             "value": "edge_enhance"
-                                    #         },
-                                    #         {
-                                    #             "label": "Enhance Edge (More)",
-                                    #             "value": "edge_enhance_more",
-                                    #         },
-                                    #         {
-                                    #             "label": "Emboss",
-                                    #             "value": "emboss"
-                                    #         },
-                                    #         {
-                                    #             "label": "Find Edges",
-                                    #             "value": "find_edges"
-                                    #         },
-                                    #         {
-                                    #             "label": "Sharpen",
-                                    #             "value": "sharpen"
-                                    #         },
-                                    #         {
-                                    #             "label": "Smooth",
-                                    #             "value": "smooth"
-                                    #         },
-                                    #         {
-                                    #             "label": "Smooth (More)",
-                                    #             "value": "smooth_more"
-                                    #         },
-                                    #     ],
-                                    #     searchable=False,
-                                    #     placeholder="Basic Filter...",
+                                    html.Div(
+                                        id='div_minimap',
+                                        children=[
+                                            html.Img(
+                                                id="img_show",
+                                                style={
+                                                    "margin": "auto",
+                                                    "max-width": "100%",
+                                                }
+                                            )
+                                        ],
+                                        style={
+                                            "margin": "auto",
+                                            "height": "250px",
+                                            "width": "250px",
+                                        }
+                                    ),
+
+                                    # dcc.Graph(
+                                    #     id="graph_croped",
+                                    #     figure={
+                                    #         "data": [
+                                    #             {
+                                    #                 'x': [0, 150], 'y': [0, 150], 'type': 'scatter',
+                                    #                 'mode':"markers",
+                                    #                 'marker_opacity':0
+                                    #             }
+                                    #         ],
+                                    #         "layout": {
+                                    #             "paper_bgcolor": "#272a31",
+                                    #             "plot_bgcolor": "#272a31",
+                                    #             "height":250,
+                                    #             "margin": dict(l=0, t=0, r=0, b=0),
+                                    #         }
+                                    #     },
+                                    #     config={"displayModeBar": False},
                                     # ),
 
+                                    drc.CustomDropdown(
+                                        id="dropdown_filters",
+                                        options=[
+                                            {
+                                                "label": "KMeans",
+                                                "value": "kmeans"
+                                            },
+                                        ],
+                                        searchable=True,
+                                        placeholder="Preprocessing...",
+                                    ),
 
-                                    # drc.CustomDropdown(
-                                    #     id="dropdown-enhance",
-                                    #     options=[
-                                    #         {
-                                    #             "label": "Brightness",
-                                    #             "value": "brightness"
-                                    #         },
-                                    #         {
-                                    #             "label": "Color Balance",
-                                    #             "value": "color"
-                                    #         },
-                                    #         {
-                                    #             "label": "Contrast",
-                                    #             "value": "contrast"
-                                    #         },
-                                    #         {
-                                    #             "label": "Sharpness",
-                                    #             "value": "sharpness"
-                                    #         },
-                                    #     ],
-                                    #     searchable=False,
-                                    #     placeholder="Enhance...",
-                                    # ),
 
-                                    # html.Div(
-                                    #     id="div-enhancement-factor",
-                                    #     children=[
-                                    #         f"Enhancement Factor:",
-                                    #         html.Div(children=dcc.Slider(
-                                    #             id="slider-enhancement-factor",
-                                    #             min=0,
-                                    #             max=2,
-                                    #             step=0.1,
-                                    #             value=1,
-                                    #             updatemode="drag",
-                                    #         )),
-                                    #     ],
-                                    # ),
-
-                                    # html.Div(
-                                    #     id="button-group",
-                                    #     children=[
-                                    #         html.Button(
-                                    #             "Run Operation",
-                                    #             id="button-run-operation"),
-                                    #         html.Button("Undo",
-                                    #                     id="button-undo"),
-                                    #     ],
-                                    # ),
+                                    html.Div(
+                                        id="btngroup_preprocessing",
+                                        children=[
+                                            html.Button(
+                                                "Run Operation", id="btn_run_operation"),
+                                            html.Button("Undo", id="btn_undo"),
+                                        ],
+                                    ),
 
                                 ]),
                             ]),
                         dcc.Tab(label="Models", children=[
+                            drc.Card(
+                                children=[
+                                    html.Div(
+                                        id='div_models',
+                                        children=[
+                                            html.Div(
+                                                id='div_current_model'
+                                            ),
+                                            dcc.Dropdown(
+                                                id='dropdown_task_types',
+                                                placeholder="Select type of task",
+                                                options=[
+                                                    {'label': 'Medical Image Semantic Segmentation', 'value': 'med_sem_seg'},
+                                                    {'label': 'Nature Image Semantic Segmentation', 'value': 'nat_sems_eg'},
+                                                    {'label': 'Medical Image Instance Segmentation', 'value': 'med_ins_seg'},
+                                                    {'label': 'Nature Image Instance Segmentation', 'value': 'nat_ins_seg'},
+                                                    {'label': 'Medical Image Object Detection', 'value': 'med_obj_det'},
+                                                    {'label': 'Nature Image Object Detection', 'value': 'nat_obj_det'},
+                                                ]
+                                            ),
 
+                                            dcc.Dropdown(
+                                                id='dropdown_model_types',
+                                                placeholder="Select type of model",
+                                                options=[
+                                                    {'label': '2D Models', 'value': '2d_models'},
+                                                    {'label': '3D Models', 'value': '3d_models'},
+                                                    {'label': 'Interactive Models', 'value': '3d_models'}
+                                                ]
+                                            ),
+                                            dcc.Dropdown(
+                                                id='dropdown_model_names',
+                                                placeholder="Select name of model",
+                                            ),
+                                        ]
+                                    ),
+
+                                    html.Pre(id='selected_model', style=styles['pre']),
+
+                                    html.Div(
+                                        id="btngroup_models",
+                                        children=[
+                                            html.Button(
+                                                "Apply to current image", id="btn_apply_one"),
+                                            html.Button(
+                                                "Apply to current dataset", id="btn_apply_all"),
+                                        ],
+                                    ),
+                                ]
+                            )
 
                         ]),
                     ]),
@@ -762,18 +760,17 @@ def upload_dataset(n_clicks, filenames, contents, dataset_name):
         ret_ul_file_list = [html.Li(filename) for filename in filenames]
     else:
         ret_ul_file_list = [html.Li("No files yet!")]
-    
+
     # 扫描已经存在的数据集
     ret_dropdown_datasets_list = []
     datasets_list = uploaded_dirs(UPLOAD_DIRECTORY, "/*")
     for dataset_fn in datasets_list:
         dataset_basename = os.path.basename(dataset_fn)
-        ret_dropdown_datasets_list.append({'label': dataset_basename, 'value': dataset_basename})
-
-
+        ret_dropdown_datasets_list.append(
+            {'label': dataset_basename, 'value': dataset_basename})
 
     # 添加新的数据集
-    if n_clicks>0:
+    if n_clicks > 0:
         print("uploading ...", filenames)
         print("n_clicks", n_clicks)
         # 将上传的文件保存到本地以dataset_name命名的路径下
@@ -781,15 +778,15 @@ def upload_dataset(n_clicks, filenames, contents, dataset_name):
         mkdir(dataset_dir)
         print('save image(s) to {}'.format(dataset_dir))
         for fn, dat in zip(filenames, contents):
-            save_file(os.path.join(dataset_dir, fn), dat)       
+            save_file(os.path.join(dataset_dir, fn), dat)
 
-        ret_dropdown_datasets_list.append({'label': dataset_name, 'value': dataset_name})
+        ret_dropdown_datasets_list.append(
+            {'label': dataset_name, 'value': dataset_name})
         # ret_dropdown_files_list = [{"label": filename, "value": filename} for filename in filenames]
         print('dataset_name', dataset_name)
-        return ret_ul_file_list , ret_dropdown_datasets_list #, dataset_name
+        return ret_ul_file_list, ret_dropdown_datasets_list  # , dataset_name
     else:
-        return ret_ul_file_list , ret_dropdown_datasets_list #, []
-
+        return ret_ul_file_list, ret_dropdown_datasets_list  # , []
 
 
 # 滑动滑动条改变当前的文件名
@@ -807,7 +804,8 @@ def slide_slider(dataset_name, idx):
         None
     ]
     if dataset_name is not None and idx is not None:
-        files_fns = uploaded_files(os.path.join(UPLOAD_DIRECTORY, dataset_name))
+        files_fns = uploaded_files(
+            os.path.join(UPLOAD_DIRECTORY, dataset_name))
         # img_fn = os.path.joint(UPLOAD_DIRECTORY, dataset_name, file_name)
         # idx_query = files_fns.index(img_fn)
 
@@ -837,13 +835,13 @@ def slide_slider(dataset_name, idx):
 #         ret_dropdown_files_list = []
 
 #         files_fns = uploaded_files(os.path.join(UPLOAD_DIRECTORY, dataset_name))
-        
+
 #         for filename in files_fns:
 #             base_name = os.path.basename(filename)
 
 #             ret_dropdown_files_list.append({"label": base_name, "value": base_name})
 #             ret_ul_file_list.append(html.Li(base_name))
-            
+
 #         return ret_dropdown_files_list, ret_ul_file_list
 #     else:
 #         return [], []
@@ -854,7 +852,7 @@ def slide_slider(dataset_name, idx):
     [
         Output('div_current_dataset', 'children'),
         Output('dropdown_files_list', 'options'),
-        Output('div_current_file', 'children'),        
+        Output('div_current_file', 'children'),
         Output('img_show', 'src'),
         Output('interactive_image', 'figure'),
         Output('div_slicer', 'children'),
@@ -882,70 +880,79 @@ def display_current_dataset(dataset_name, file_name, selected_data):
     print(dataset_name, file_name)
     if dataset_name is not None:
         ret_dropdown_files_list = []
-        files_fns = uploaded_files(os.path.join(UPLOAD_DIRECTORY, dataset_name))
+        files_fns = uploaded_files(
+            os.path.join(UPLOAD_DIRECTORY, dataset_name))
         for filename in files_fns:
             base_name = os.path.basename(filename)
-            ret_dropdown_files_list.append({"label": base_name, "value": base_name})
-        
+            ret_dropdown_files_list.append(
+                {"label": base_name, "value": base_name})
+
         if file_name is not None:
             # 读取当前文件, 将其输出到interactive_image上
-            current_file = os.path.join(UPLOAD_DIRECTORY, dataset_name, file_name)
+            current_file = os.path.join(
+                UPLOAD_DIRECTORY, dataset_name, file_name)
             file_format = '.'.join(file_name.split('.')[1:])
             print(current_file, file_format)
 
-            img_data = get_image_data(file_fn=current_file, file_format=file_format, enc_format='png')
+            img_data = get_image_data(
+                file_fn=current_file, file_format=file_format, enc_format='png')
             print(img_data.keys())
-            
+
             if 'decoded_b64' in img_data.keys():
                 # ret[3] = img_data['decoded_b64']
-                fig = add_img_to_figure(img_data['decoded_b64'], height=img_data['height'], width=img_data['width'])
+                fig = add_img_to_figure(
+                    img_data['decoded_b64'], height=img_data['height'], width=img_data['width'])
                 ret[4] = fig
 
                 # 图像处理
                 print("selected_data", selected_data)
-                if selected_data:                    
+                if selected_data:
                     img = img_data['data']
 
                     # 获取得到的坐标
                     lower, upper = map(int, selected_data["range"]["y"])
                     left, right = map(int, selected_data["range"]["x"])
                     # 确保x, y落在图像内部
-                    lower, upper, left, right = max(lower, 0), max(upper, 0), max(left, 0), max(right, 0)
+                    lower, upper, left, right = max(lower, 0), max(
+                        upper, 0), max(left, 0), max(right, 0)
                     w, h = img_data['width'], img_data['height']
-                    lower, upper, left, right = min(lower, h), min(upper, h), min(left, w), min(right, w)
-                    if lower+upper+left+right==0:
+                    lower, upper, left, right = min(lower, h), min(
+                        upper, h), min(left, w), min(right, w)
+                    if lower+upper+left+right == 0:
                         lower, upper, left, right = 0, h, 0, w
                     zone = (lower, upper, left, right)
                     print(zone)
-                    
+
                     ds = kmeans_seg(img, zone)
-                    
+
                     croped = rescale(img[lower:upper+1, left:right+1])
                     dialated = rescale(ds['image_dilated'][lower:upper+1, left:right+1])
                     # dialated = skimage.color.label2rgb(dialated)
                     dialated = dialated
 
                     # 显示子图, 原图, 腐蚀处理后的, 颜色标签, 叠加(contour)
-                    labels = rescale(ds['image_labels'][lower:upper+1, left:right+1])
-                    mask_applied = rescale(ds['mask_applied'][lower:upper+1, left:right+1])
-                                        
+                    labels = rescale(ds['image_labels']
+                                     [lower:upper+1, left:right+1])
+                    mask_applied = rescale(
+                        ds['mask_applied'][lower:upper+1, left:right+1])
+
                     fig = get_subplots_fig(2, 2, [croped, dialated, labels, mask_applied])
                     ret[4] = fig
 
                     # 显示结果
-                    img_croped_data = __get_image_data(data=mask_applied, file_format=file_format, enc_format='png')
+                    img_croped_data = __get_image_data(
+                        data=mask_applied, file_format=file_format, enc_format='png')
                     if 'decoded_b64' in img_croped_data.keys():
                         img_croped_decoded = img_croped_data['decoded_b64']
                         #fig_croped = add_img_to_figure(img_croped_decoded, height=250, width=250, figsize=(250, 250))
                         ret[3] = img_croped_decoded
-
 
                     # # Adjust height difference
                     # height = img.shape[1]
                     # upper = height - upper
                     # lower = height - lower
                     # selection_zone = (left, upper, right, lower)
-                    
+
                     # img_croped = img[lower:upper, left:right, :]
                     # print(left, right, lower, upper)
                     # print(type(img_croped), img_croped.shape)
@@ -955,35 +962,34 @@ def display_current_dataset(dataset_name, file_name, selected_data):
                     #     #fig_croped = add_img_to_figure(img_croped_decoded, height=250, width=250, figsize=(250, 250))
                     #     ret[3] = img_croped_decoded
 
-
                 idx = files_fns.index(current_file)
-                
+
                 num_imgs = len(files_fns)
                 #step  = 1 if num_imgs<101 else num_imgs//10
                 print("current file:{} idx: {}/{}".format(current_file, idx, num_imgs))
-                if num_imgs<101:
+                if num_imgs < 101:
                     marks = {str(i+1): str(i+1) for i in range(0, num_imgs, 1)}
                 else:
-                    marks = {str(i+1): str(i+1) for i in range(0, num_imgs, num_imgs//10)}
+                    marks = {str(i+1): str(i+1)
+                             for i in range(0, num_imgs, num_imgs//10)}
 
                 slider_images = dcc.Slider(
                     id="slicer_images",
-                        min=1,
-                        max=num_imgs,
-                        value=idx+1,
-                        step=1,
-                        marks=marks
+                    min=1,
+                    max=num_imgs,
+                    value=idx+1,
+                    step=1,
+                    marks=marks
                 )
                 print(marks)
                 ret[5] = slider_images
 
-
         # return ret_dropdown_files_list, ret_ul_file_list
         ret[1] = ret_dropdown_files_list
-        
-        return ret[0], ret[1], ret[2], ret[3], ret[4], ret[5]  #, fig
+
+        return ret[0], ret[1], ret[2], ret[3], ret[4], ret[5]  # , fig
     else:
-        return ret[0], ret[1], ret[2], ret[3], ret[4], ret[5]  #, go.Figure()
+        return ret[0], ret[1], ret[2], ret[3], ret[4], ret[5]  # , go.Figure()
 
 # @app.callback(
 #     Output("interactive_image", "figure"),
@@ -1035,13 +1041,13 @@ def display_relayout_data(relayoutData):
 #         x_min, x_max = selectedData['range']['x']
 #         y_min, y_max = selectedData['range']['y']
 #         if dataset_name is not None and file_name is not None:
-            
+
 #             current_file = os.path.join(UPLOAD_DIRECTORY, dataset_name, file_name)
 #             file_format = '.'.join(file_name.split('.')[1:])
 
 #             img = read_file(current_file, file_format)
 #             print(type(img), img.shape)
-            
+
 #             # 处理：裁剪图像
 #             # 注意坐标传回来首先都是str类型
 #             x_min, x_max, y_min, y_max = int(x_min), int(x_max), int(y_min), int(y_max)
@@ -1049,7 +1055,7 @@ def display_relayout_data(relayoutData):
 #             print(type(img_croped), img_croped.shape)
 
 #             img_data = __get_image_data(data=img_croped, file_format=file_format, enc_format='png')
-            
+
 #             if 'decoded_b64' in img_data.keys():
 #                 img_decoded = img_data['decoded_b64']
 #                 fig = add_img_to_figure(img_decoded, height=250, width=250, figsize=(250, 250))

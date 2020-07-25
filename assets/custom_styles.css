@@ -296,7 +296,7 @@ html, body {
     cursor: pointer;
 }
 
-.Select--single > .Select-control .Select-value, .Select-placeholder {
+.Select--single > .Select-control .Select-value, .Select-placeholder{
     border: 1px solid #43454a;
     border-radius: 4px;
     color: darkgray;
@@ -324,13 +324,30 @@ html, body {
 }
 
 /*Button*/
-#button-run-operation, #button-undo {
+#btn_run_operation, #btn_undo, #btn_upload {
     background-color: #31343a;
-    border: #fccd61 solid 1px;
+    border: #119DFF solid 2px;
     padding: 0.5rem 1rem;
     border-radius: 0.3rem;
     color: darkgray;
 }
+
+#input_dataset_name{
+    background-color: #31343a;
+    border:#fccd61 solid 2px;
+    padding: 0.5rem 1rem;
+    border-radius: 0.3rem;
+    color: darkgray;
+}
+
+#btn_transverse, #btn_coronal, #btn_saggital{
+    background-color: #31343a;
+    border:#618afc solid 0px;
+    padding: 0.5rem 1rem;
+    border-radius: 0rem;
+    color: rgb(230, 221, 221);
+}
+
 
 #button-run-operation:hover, #button-undo:hover {
     color: white;
